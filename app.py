@@ -2,6 +2,7 @@ from flask import Flask, render_template,send_from_directory,request
 import os
 import json 
 import socket
+import localip
 
 app = Flask(__name__)
 
@@ -27,28 +28,20 @@ class ImgStore:
                 request.files['image'].save(f"./json_{request.form['path']}/{request.form['path']}.png")
                 print('creating img.file....')
                 with open(f"./json_{request.form['path']}/img.json",'w') as img:
-                    ip = self.get_local_ip() if not self.get_local_ip() is None else "192.168.8.140"
+                    ip = localip.LocalIp.get_local_ip() if not localip.LocalIp.get_local_ip() is None else "192.168.8.140"
                     print(ip)
-                    img.write(json.dump({'link':f'https://{ip}:5005/{request.form["path"]}'}))
+                    img.write(json.dumps({'link':f'http://{ip}:5005/{request.form["path"]}'}))
                 print('Complete!')
+                return render_template('success.html')
                 
     def run(self):
         self.app.debug = True 
         self.app.run(host = '0.0.0.0',port=5005)
 
-    def get_local_ip(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(('10.255.255.255', 1))
-            local_ip = s.getsockname()[0]
-            s.close()
-            return local_ip
-        except Exception as e:
-            print(f"Error getting local IP: {e}")
-            return None
 
 
 
 if __name__ == '__main__':
     img = ImgStore()
     img.run()
+
